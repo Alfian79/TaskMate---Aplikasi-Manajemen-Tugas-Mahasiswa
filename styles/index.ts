@@ -1,1 +1,1 @@
-export { praktikumStyles } from "./praktikum";
+
