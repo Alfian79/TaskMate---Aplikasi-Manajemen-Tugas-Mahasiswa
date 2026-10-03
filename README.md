@@ -1,50 +1,63 @@
-# Welcome to your Expo app 👋
+# 📱 TaskMate - Aplikasi Manajemen Tugas Mahasiswa
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+> **Tugas Praktikum Pemrograman Mobile - Modul 1 (Sintaks & UI Dasar)**  
+> **Laboratorium Informatika - Universitas Muhammadiyah Malang**
 
-## Get started
+---
 
-1. Install dependencies
+## 📌 Deskripsi Aplikasi
+**TaskMate** adalah aplikasi mobile berbasis React Native (Expo) yang dirancang untuk membantu mahasiswa mengelola dan memantau tugas-tugas perkuliahan secara terorganisir. Aplikasi ini menerapkan konsep sintaks dasar TypeScript, penggunaan komponen UI React Native, perulangan data dinamis, serta kombinasi styling.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## 👥 Anggota Kelompok
+**Kelompok:** [Kelompok 4]  
+**Kelas:** [Pemrograman Mobile E]
 
-   ```bash
-   npx expo start
-   ```
+| No | Nama Lengkap | NIM | Peran & Tanggung Jawab |
+|:--:|:---|:---:|:---|
+| 1 | **Dino Alfian Zamri** | 202310370311329 | **Data & Looping Specialist:** Project Setup, Inisialisasi GitHub, Struktur Data TypeScript (`interface` & *Array of Objects*), serta Perulangan Data Dinamis (`.map()` / `<FlatList>`). |
+| 2 | **M Fajar Nurilham Jaya** | 202310370311317 | **UI & Logic Specialist:** Penyusunan Komponen UI (`View`, `Text`, `Pressable`, `@expo/vector-icons`), *Custom Functions* Logika Aplikasi, dan Penerapan *Inline & External Styling*. |
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 🛠️ Implementasi Materi Modul 1
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Aplikasi ini memenuhi seluruh kriteria teknis penilaian Modul 1:
 
-## Get a fresh project
+1. **TypeScript Interface & Array of Objects (`5.5`)**[cite: 40 - 41]:
+   - Menggunakan `interface TaskItem` untuk mendefinisikan tipe data tugas (id, title, course, deadline, status, priority).
+   - Menyimpan daftar tugas dalam *Array of Objects*.
+2. **Custom Function & Loop Rendering (`5.3` & `5.4`)**[cite: 30 - 38]:
+   - Menggunakan fungsi kustom (`renderTaskCard` / `getPriorityColor`) untuk mengolah dan menampilkan item tugas.
+   - Menggunakan perulangan `.map()` atau `<FlatList>` dengan unique `key` prop.
+3. **Kombinasi Inline & External Styling (`3.1` - `3.3`)**[cite: 13 - 18]:
+   - *External Styling*: Menggunakan `StyleSheet.create()` di file lokal/terpisah untuk konsistensi kartu dan kontainer.
+   - *Inline Styling*: Digunakan untuk penyesuaian dinamis (misalnya warna status tugas/prioritas berdasarkan logika kondisi).
+4. **Library & Packages (`4`)**[cite: 20]:
+   - Menggunakan `@expo/vector-icons` (`Ionicons` / `MaterialCommunityIcons`) untuk melengkapi ikon interaktif UI.
 
-When you're ready, run:
+---
+
+## 🚀 Cara Jalankan Project
+
+### 1. Prasyarat
+- Node.js (versi LTS direkomendasikan)
+- Aplikasi **Expo Go** terpasang di smartphone Android / iOS
+
+### 2. Langkah Instalasi & Menjalankan
 
 ```bash
-npm run reset-project
-```
+# 1. Clone repositori ini
+git clone [https://github.com/Alfian79/TaskMate-Aplikasi-Manajemen-Tugas-Mahasiswa.git](https://github.com/Alfian79/TaskMate-Aplikasi-Manajemen-Tugas-Mahasiswa.git)
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+# 2. Masuk ke direktori project
+cd TaskMate-Aplikasi-Manajemen-Tugas-Mahasiswa
 
-## Learn more
+# 3. Install semua dependency
+npm install
 
-To learn more about developing your project with Expo, look at the following resources:
+# 4. Jalankan Expo Development Server
+npx expo start --go
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# 5. Setelah server berjalan, pindai (scan) QR Code yang muncul di terminal menggunakan aplikasi Expo Go atau kamera ponsel Anda.
