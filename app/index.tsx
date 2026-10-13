@@ -1,7 +1,11 @@
+import { TaskItem } from "@/constants";
+import { useTasks } from "@/context/TaskContext";
+import { styles } from "@/styles";
+import { countCompleted, getPriorityColor } from "@/utils/taskHelpers";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState, useEffect } from "react";
+import { useRouter } from "expo-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
   Button,
   Image,
   Pressable,
@@ -10,70 +14,63 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { initialTasks, Priority, TaskItem } from "../constants/tasksData";
-import { styles } from "../styles";
-
-// CUSTOM FUNCTION 1: menentukan warna berdasarkan prioritas
-function getPriorityColor(priority: Priority): string {
-  if (priority === "High") {
-    return "#ef4444"; // merah
-  } else if (priority === "Medium") {
-    return "#f59e0b"; // oranye
-  }
-  return "#4022c5"; // hijau/biru (Low)
-}
-
-// CUSTOM FUNCTION 2: menghitung jumlah tugas selesai
-function countCompleted(tasks: TaskItem[]): number {
-  let total = 0;
-  for (const task of tasks) {
-    if (task.isCompleted) {
-      total = total + 1;
-    }
-  }
-  return total;
-}
-
-// CUSTOM FUNCTION 3: menampilkan detail tugas via Alert
-function showTaskDetail(task: TaskItem) {
-  const status = task.isCompleted ? "Sudah selesai" : "Belum selesai";
-  Alert.alert(
-    task.title,
-    `${task.course}\nDeadline: ${task.deadline}\nStatus: ${status}`,
-  );
-}
 
 export default function HomeScreen() {
   const router = useRouter();
 
-  // 1. MENGGUNAKAN USESTATE: Menyimpan daftar tugas agar dinamis
-  const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
+  // useContext (lewat useTasks): daftar tugas diambil dari Context, bukan state lokal
+  const { tasks } = useTasks();
+
+  // 1. useState: menyimpan teks pencarian dan status tampil/tidaknya teks "Daftar diperbarui"
   const [searchQuery, setSearchQuery] = useState("");
+  const [showUpdated, setShowUpdated] = useState(false);
 
-  // 2. MENGGUNAKAN USEEFFECT: Dijalankan sekali saat komponen pertama kali dimuat (Mounting)
+  // useRef: mengingat jumlah tugas sebelumnya tanpa memicu re-render
+  const prevCount = useRef(tasks.length);
+
+  // 2. useEffect: dijalankan sekali saat komponen pertama kali dimuat
   useEffect(() => {
-    console.log("HomeScreen berhasil dimuat. Total tugas awal:", tasks.length);
-  }, []); // Array dependensi kosong berarti berjalan sekali di awal
+    console.log("HomeScreen berhasil dimuat.");
+  }, []);
 
-  // useEffect tambahan untuk memantau perubahan pada daftar tugas
+  // useEffect dengan dependency: dijalankan setiap kali jumlah tugas berubah.
+  // Jika jumlahnya bertambah (ada tugas baru), tampilkan teks "Daftar diperbarui" selama 2 detik.
   useEffect(() => {
-    console.log("Daftar tugas diperbarui! Jumlah saat ini:", tasks.length);
-  }, [tasks]); // Dijalankan setiap kali state 'tasks' berubah
+    console.log("Jumlah tugas saat ini:", tasks.length);
 
-  const completed = countCompleted(tasks);
+    if (tasks.length <= prevCount.current) {
+      prevCount.current = tasks.length;
+      setShowUpdated(false);
+      return;
+    }
 
-  // Filter tugas berdasarkan pencarian (searchQuery)
-  const filteredTasks = tasks.filter((task) =>
-    task.title.toLowerCase().includes(searchQuery.toLowerCase())
+    prevCount.current = tasks.length;
+    setShowUpdated(true);
+    const timer = setTimeout(() => setShowUpdated(false), 2000);
+
+    // cleanup: batalkan timer jika efek dijalankan ulang atau halaman ditutup
+    return () => clearTimeout(timer);
+  }, [tasks.length]);
+
+  // 3. useMemo: hasil filter & hitungan disimpan, dihitung ulang hanya jika dependency berubah
+  const filteredTasks = useMemo(
+    () =>
+      tasks.filter((task) =>
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [tasks, searchQuery],
   );
+  const completed = useMemo(() => countCompleted(tasks), [tasks]);
 
-  // CUSTOM FUNCTION 4: membuat kartu tugas
+  // CUSTOM FUNCTION: membuat kartu tugas
   function renderTaskCard(task: TaskItem) {
     return (
       <Pressable
         key={task.id}
-        onPress={() => showTaskDetail(task)}
+        // router.push: buka halaman detail (dynamic route) dengan membawa id
+        onPress={() =>
+          router.push({ pathname: "/task/[id]", params: { id: task.id } })
+        }
         style={[
           styles.card,
           {
@@ -94,7 +91,9 @@ export default function HomeScreen() {
               style={[
                 styles.taskTitle,
                 {
-                  textDecorationLine: task.isCompleted ? "line-through" : "none",
+                  textDecorationLine: task.isCompleted
+                    ? "line-through"
+                    : "none",
                 },
               ]}
             >
@@ -141,22 +140,40 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Input Pencarian yang terhubung ke state searchQuery */}
-        <TextInput 
-          placeholder="Cari tugas..." 
+        {/* Input pencarian yang terhubung ke state searchQuery */}
+        <TextInput
+          placeholder="Cari tugas..."
           style={styles.searchInput}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
 
-        <Button
-          title="Tambah Tugas"
-          onPress={() => router.push("/detail" as any)}
-        />
+        {/* router.push: pindah ke halaman form tambah tugas */}
+        <Button title="Tambah Tugas" onPress={() => router.push("/add")} />
+
+        {/* Muncul sebentar setelah tugas baru ditambahkan (diatur oleh useEffect) */}
+        {showUpdated ? (
+          <Text
+            style={{
+              textAlign: "center",
+              color: "#15803d",
+              fontWeight: "600",
+              marginTop: 10,
+            }}
+          >
+            Daftar diperbarui
+          </Text>
+        ) : null}
       </View>
 
-      {/* LOOP: Menampilkan data dari state filteredTasks */}
-      {filteredTasks.map((task) => renderTaskCard(task))}
+      {/* LOOP: menampilkan data hasil filter */}
+      {filteredTasks.length === 0 ? (
+        <Text style={{ textAlign: "center", color: "#64748b", marginTop: 20 }}>
+          Tidak ada tugas yang cocok.
+        </Text>
+      ) : (
+        filteredTasks.map((task) => renderTaskCard(task))
+      )}
     </ScrollView>
   );
 }
