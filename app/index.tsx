@@ -151,7 +151,7 @@ export default function HomeScreen() {
 
         <Button
           title="Tambah Tugas"
-          onPress={() => router.push("/add-task" as any)}
+          onPress={() => router.push("/detail" as any)}
         />
       </View>
 
