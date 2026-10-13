@@ -1,6 +1,11 @@
+import { TaskItem } from "@/constants";
+import { useTasks } from "@/context/TaskContext";
+import { styles } from "@/styles";
+import { countCompleted, getPriorityColor } from "@/utils/taskHelpers";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
   Button,
   Image,
   Pressable,
@@ -9,100 +14,115 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { initialTasks, Priority, TaskItem } from "../constants/tasksData";
-import { styles } from "../styles";
-
-// CUSTOM FUNCTION 1: menentukan warna berdasarkan prioritas (if / else if)
-function getPriorityColor(priority: Priority): string {
-  if (priority === "High") {
-    return "#ef4444"; // merah
-  } else if (priority === "Medium") {
-    return "#f59e0b"; // oranye
-  }
-  return "#4022c5"; // hijau (Low)
-}
-
-// CUSTOM FUNCTION 2: menghitung jumlah tugas selesai (primitive loop for...of)
-function countCompleted(tasks: TaskItem[]): number {
-  let total = 0;
-  for (const task of tasks) {
-    if (task.isCompleted) {
-      total = total + 1;
-    }
-  }
-  return total;
-}
-
-// CUSTOM FUNCTION 3: function bawaan Alert dibungkus function kita sendiri
-function showTaskDetail(task: TaskItem) {
-  const status = task.isCompleted ? "Sudah selesai" : "Belum selesai";
-  Alert.alert(
-    task.title,
-    `${task.course}\nDeadline: ${task.deadline}\nStatus: ${status}`,
-  );
-}
-
-// CUSTOM FUNCTION 4: membuat kartu tugas, cukup isi parameter (Modul 1, 5.3.B)
-function renderTaskCard(task: TaskItem) {
-  return (
-    <Pressable
-      key={task.id} // key unik untuk setiap item di dalam loop
-      onPress={() => showTaskDetail(task)} // inline function
-      // INLINE STYLING: nilai bergantung pada data (prioritas & status)
-      style={[
-        styles.card,
-        {
-          borderLeftColor: getPriorityColor(task.priority),
-          opacity: task.isCompleted ? 0.6 : 1,
-        },
-      ]}
-    >
-      <View style={styles.cardTop}>
-        <Ionicons
-          name={task.isCompleted ? "checkmark-circle" : "ellipse-outline"}
-          size={28}
-          color={task.isCompleted ? "#4322c5" : "#94a3b8"}
-        />
-
-        <View style={styles.cardBody}>
-          <Text
-            style={[
-              styles.taskTitle,
-              {
-                textDecorationLine: task.isCompleted ? "line-through" : "none",
-              },
-            ]}
-          >
-            {task.title}
-          </Text>
-          <Text style={styles.courseText}>Mata Kuliah: {task.course}</Text>
-
-          <View style={styles.deadlineRow}>
-            <Ionicons name="time-outline" size={14} color="#ef4444" />
-            <Text style={styles.deadlineText}>Deadline: {task.deadline}</Text>
-          </View>
-
-          {/* properti opsional: tampil hanya jika note ada (ternary) */}
-          {task.note ? (
-            <Text style={styles.noteText}>Catatan: {task.note}</Text>
-          ) : null}
-
-          <View
-            style={[
-              styles.badge,
-              { backgroundColor: getPriorityColor(task.priority) },
-            ]}
-          >
-            <Text style={styles.badgeText}>Prioritas: {task.priority}</Text>
-          </View>
-        </View>
-      </View>
-    </Pressable>
-  );
-}
 
 export default function HomeScreen() {
-  const completed = countCompleted(initialTasks);
+  const router = useRouter();
+
+  // useContext (lewat useTasks): daftar tugas diambil dari Context, bukan state lokal
+  const { tasks } = useTasks();
+
+  // 1. useState: menyimpan teks pencarian dan status tampil/tidaknya teks "Daftar diperbarui"
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showUpdated, setShowUpdated] = useState(false);
+
+  // useRef: mengingat jumlah tugas sebelumnya tanpa memicu re-render
+  const prevCount = useRef(tasks.length);
+
+  // 2. useEffect: dijalankan sekali saat komponen pertama kali dimuat
+  useEffect(() => {
+    console.log("HomeScreen berhasil dimuat.");
+  }, []);
+
+  // useEffect dengan dependency: dijalankan setiap kali jumlah tugas berubah.
+  // Jika jumlahnya bertambah (ada tugas baru), tampilkan teks "Daftar diperbarui" selama 2 detik.
+  useEffect(() => {
+    console.log("Jumlah tugas saat ini:", tasks.length);
+
+    if (tasks.length <= prevCount.current) {
+      prevCount.current = tasks.length;
+      setShowUpdated(false);
+      return;
+    }
+
+    prevCount.current = tasks.length;
+    setShowUpdated(true);
+    const timer = setTimeout(() => setShowUpdated(false), 2000);
+
+    // cleanup: batalkan timer jika efek dijalankan ulang atau halaman ditutup
+    return () => clearTimeout(timer);
+  }, [tasks.length]);
+
+  // 3. useMemo: hasil filter & hitungan disimpan, dihitung ulang hanya jika dependency berubah
+  const filteredTasks = useMemo(
+    () =>
+      tasks.filter((task) =>
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [tasks, searchQuery],
+  );
+  const completed = useMemo(() => countCompleted(tasks), [tasks]);
+
+  // CUSTOM FUNCTION: membuat kartu tugas
+  function renderTaskCard(task: TaskItem) {
+    return (
+      <Pressable
+        key={task.id}
+        // router.push: buka halaman detail (dynamic route) dengan membawa id
+        onPress={() =>
+          router.push({ pathname: "/task/[id]", params: { id: task.id } })
+        }
+        style={[
+          styles.card,
+          {
+            borderLeftColor: getPriorityColor(task.priority),
+            opacity: task.isCompleted ? 0.6 : 1,
+          },
+        ]}
+      >
+        <View style={styles.cardTop}>
+          <Ionicons
+            name={task.isCompleted ? "checkmark-circle" : "ellipse-outline"}
+            size={28}
+            color={task.isCompleted ? "#4322c5" : "#94a3b8"}
+          />
+
+          <View style={styles.cardBody}>
+            <Text
+              style={[
+                styles.taskTitle,
+                {
+                  textDecorationLine: task.isCompleted
+                    ? "line-through"
+                    : "none",
+                },
+              ]}
+            >
+              {task.title}
+            </Text>
+            <Text style={styles.courseText}>Mata Kuliah: {task.course}</Text>
+
+            <View style={styles.deadlineRow}>
+              <Ionicons name="time-outline" size={14} color="#ef4444" />
+              <Text style={styles.deadlineText}>Deadline: {task.deadline}</Text>
+            </View>
+
+            {task.note ? (
+              <Text style={styles.noteText}>Catatan: {task.note}</Text>
+            ) : null}
+
+            <View
+              style={[
+                styles.badge,
+                { backgroundColor: getPriorityColor(task.priority) },
+              ]}
+            >
+              <Text style={styles.badgeText}>Prioritas: {task.priority}</Text>
+            </View>
+          </View>
+        </View>
+      </Pressable>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -115,23 +135,45 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.headerTitle}>TaskMate</Text>
             <Text style={styles.headerSubtitle}>
-              {completed} dari {initialTasks.length} tugas selesai
+              {completed} dari {tasks.length} tugas selesai
             </Text>
           </View>
         </View>
 
-        <TextInput placeholder="Cari tugas..." style={styles.searchInput} />
-
-        <Button
-          title="Tambah Tugas"
-          onPress={() =>
-            Alert.alert("Info", "Fitur tambah tugas dibuat di modul berikutnya")
-          }
+        {/* Input pencarian yang terhubung ke state searchQuery */}
+        <TextInput
+          placeholder="Cari tugas..."
+          style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
+
+        {/* router.push: pindah ke halaman form tambah tugas */}
+        <Button title="Tambah Tugas" onPress={() => router.push("/add")} />
+
+        {/* Muncul sebentar setelah tugas baru ditambahkan (diatur oleh useEffect) */}
+        {showUpdated ? (
+          <Text
+            style={{
+              textAlign: "center",
+              color: "#15803d",
+              fontWeight: "600",
+              marginTop: 10,
+            }}
+          >
+            Daftar diperbarui
+          </Text>
+        ) : null}
       </View>
 
-      {/* LOOP: .map() memanggil custom function untuk setiap tugas */}
-      {initialTasks.map((task) => renderTaskCard(task))}
+      {/* LOOP: menampilkan data hasil filter */}
+      {filteredTasks.length === 0 ? (
+        <Text style={{ textAlign: "center", color: "#64748b", marginTop: 20 }}>
+          Tidak ada tugas yang cocok.
+        </Text>
+      ) : (
+        filteredTasks.map((task) => renderTaskCard(task))
+      )}
     </ScrollView>
   );
 }
