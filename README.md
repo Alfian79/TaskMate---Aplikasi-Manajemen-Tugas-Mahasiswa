@@ -1,12 +1,13 @@
 # 📱 TaskMate - Aplikasi Manajemen Tugas Mahasiswa
 
-> **Tugas Praktikum Pemrograman Mobile - Modul 1 (Sintaks & UI Dasar)**  
+> **Tugas Pekan Demo Praktikum Pemrograman Mobile - Modul 1 s.d. 3**  
+> (Sintaks & UI Dasar, State/Hooks/Navigasi, Asynchronous & API Call)  
 > **Laboratorium Informatika - Universitas Muhammadiyah Malang**
 
 ---
 
 ## 📌 Deskripsi Aplikasi
-**TaskMate** adalah aplikasi mobile berbasis React Native (Expo) yang dirancang untuk membantu mahasiswa mengelola dan memantau tugas-tugas perkuliahan secara terorganisir. Aplikasi ini menerapkan konsep sintaks dasar TypeScript, penggunaan komponen UI React Native, perulangan data dinamis, serta kombinasi styling.
+**TaskMate** adalah aplikasi mobile berbasis React Native (Expo) yang dirancang untuk membantu mahasiswa mengelola dan memantau tugas-tugas perkuliahan secara terorganisir. Aplikasi ini menerapkan konsep sintaks dasar TypeScript, komponen UI React Native, perulangan data dinamis, kombinasi styling, state & hooks, navigasi antar halaman, serta pengambilan data dari API eksternal secara asynchronous.
 
 ---
 
@@ -25,17 +26,42 @@
 
 Aplikasi ini memenuhi seluruh kriteria teknis penilaian Modul 1:
 
-1. **TypeScript Interface & Array of Objects (`5.5`)**[cite: 40 - 41]:
+1. **TypeScript Interface & Array of Objects (`5.5`)**:
    - Menggunakan `interface TaskItem` untuk mendefinisikan tipe data tugas (id, title, course, deadline, status, priority).
    - Menyimpan daftar tugas dalam *Array of Objects*.
-2. **Custom Function & Loop Rendering (`5.3` & `5.4`)**[cite: 30 - 38]:
+2. **Custom Function & Loop Rendering (`5.3` & `5.4`)**:
    - Menggunakan fungsi kustom (`renderTaskCard` / `getPriorityColor`) untuk mengolah dan menampilkan item tugas.
    - Menggunakan perulangan `.map()` atau `<FlatList>` dengan unique `key` prop.
-3. **Kombinasi Inline & External Styling (`3.1` - `3.3`)**[cite: 13 - 18]:
+3. **Kombinasi Inline & External Styling (`3.1` - `3.3`)**:
    - *External Styling*: Menggunakan `StyleSheet.create()` di file lokal/terpisah untuk konsistensi kartu dan kontainer.
    - *Inline Styling*: Digunakan untuk penyesuaian dinamis (misalnya warna status tugas/prioritas berdasarkan logika kondisi).
-4. **Library & Packages (`4`)**[cite: 20]:
+4. **Library & Packages (`4`)**:
    - Menggunakan `@expo/vector-icons` (`Ionicons` / `MaterialCommunityIcons`) untuk melengkapi ikon interaktif UI.
+
+---
+
+## 🛠️ Implementasi Materi Modul 2
+
+| Kriteria | Lokasi |
+|:---|:---|
+| `useState` & `useEffect` | `app/index.tsx` (state pencarian, efek saat dimuat, efek dengan dependency `tasks.length` + cleanup timer) |
+| Navigasi `push()`, `back()`, dan fungsi lain (`replace`, `canGoBack`) | `app/index.tsx`, `app/add.tsx`, `app/task/[id].tsx` |
+| `_layout` & `<Stack.Screen>` | `app/_layout.tsx`, serta `Stack.Screen` di `app/task/[id].tsx` |
+| Tambahan: `useContext`, `useRef`, `useMemo`, dynamic route | `context/TaskContext.tsx`, `app/index.tsx`, `app/task/[id].tsx` |
+
+---
+
+## 🛠️ Implementasi Materi Modul 3 (Asynchronous & API Call)
+
+API eksternal yang dipakai: **DummyJSON** (`GET https://dummyjson.com/todos`). Data todo dari server diubah menjadi tugas TaskMate.
+
+| Kriteria Penilaian | Implementasi | Lokasi |
+|:---|:---|:---|
+| Data dari External API ke Object memakai Interface | Interface `ApiTodo` & `ApiTodosResponse`; hasil `fetch` dimasukkan ke `ApiTodosResponse` lalu dipetakan ke `TaskItem` | `types/api.ts`, `services/taskService.ts` (`fetchRemoteTasks`, `mapTodoToTask`) |
+| Custom & Pre-built Async Function | Custom: `fetchRemoteTasks`, `importRemoteTasks`. Pre-built: `fetch()` dan `response.json()` dengan `await` | `services/taskService.ts`, `context/TaskContext.tsx` |
+| `.then()`, `resolve()`, `reject()` | `saveTaskToServer` membuat `new Promise` (`resolve` jika berhasil, `reject` jika judul duplikat); dipakai dengan `.then().catch().finally()` | `services/taskService.ts`, `app/add.tsx`, `utils/delay.ts` |
+
+Pendukung: `try...catch...finally` dan state `isLoading`/`error` di `context/TaskContext.tsx`, komponen `components/Loading.tsx` dan `components/ErrorMessage.tsx`, serta tombol **Impor Tugas dari Server** di `app/index.tsx`.
 
 ---
 
@@ -49,10 +75,10 @@ Aplikasi ini memenuhi seluruh kriteria teknis penilaian Modul 1:
 
 ```bash
 # 1. Clone repositori ini
-git clone [https://github.com/Alfian79/TaskMate-Aplikasi-Manajemen-Tugas-Mahasiswa.git](https://github.com/Alfian79/TaskMate-Aplikasi-Manajemen-Tugas-Mahasiswa.git)
+git clone https://github.com/Alfian79/TaskMate---Aplikasi-Manajemen-Tugas-Mahasiswa.git
 
 # 2. Masuk ke direktori project
-cd TaskMate-Aplikasi-Manajemen-Tugas-Mahasiswa
+cd TaskMate---Aplikasi-Manajemen-Tugas-Mahasiswa
 
 # 3. Install semua dependency
 npm install
