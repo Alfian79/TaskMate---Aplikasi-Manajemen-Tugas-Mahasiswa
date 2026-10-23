@@ -1,5 +1,6 @@
 import { Priority } from "@/constants";
 import { useTasks } from "@/context/TaskContext";
+import { saveTaskToServer } from "@/services/taskService";
 import { getPriorityColor } from "@/utils/taskHelpers";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
@@ -17,7 +18,10 @@ const priorityOptions: Priority[] = ["High", "Medium", "Low"];
 
 export default function AddTaskScreen() {
   const router = useRouter();
-  const { addTask } = useTasks(); // useContext: fungsi untuk menambah tugas ke daftar utama
+  const { tasks, addTask } = useTasks(); // useContext: daftar & fungsi untuk menambah tugas
+
+  // MODUL 3: true selama proses "menyimpan ke server" berjalan (tombol dinonaktifkan)
+  const [isSaving, setIsSaving] = useState(false);
 
   // useState: menampung input user pada form
   const [title, setTitle] = useState("");
@@ -44,15 +48,33 @@ export default function AddTaskScreen() {
       return;
     }
 
-    addTask({
+    const newTask = {
       title: title.trim(),
       course: course.trim(),
       deadline: deadline.trim(),
       priority,
-    });
+    };
 
-    // Langsung kembali ke Home; teks "Daftar diperbarui" muncul di sana (lihat useEffect di index.tsx)
-    goBackSafely();
+    setIsSaving(true);
+
+    // MODUL 3: .then() / .catch() / .finally() pada Promise buatan sendiri (saveTaskToServer)
+    saveTaskToServer(
+      newTask,
+      tasks.map((task) => task.title),
+    )
+      .then((savedTask) => {
+        // dijalankan saat Promise di-resolve (berhasil)
+        addTask(savedTask);
+        // Kembali ke Home; teks "Daftar diperbarui" muncul di sana (lihat useEffect di index.tsx)
+        goBackSafely();
+      })
+      .catch((error: Error) => {
+        // dijalankan saat Promise di-reject (gagal)
+        Alert.alert("Gagal menyimpan", error.message);
+      })
+      .finally(() => {
+        setIsSaving(false); // tombol aktif kembali
+      });
   }
 
   return (
@@ -110,7 +132,11 @@ export default function AddTaskScreen() {
         ))}
       </View>
 
-      <Button title="Simpan Tugas" onPress={handleSave} />
+      <Button
+        title={isSaving ? "Menyimpan..." : "Simpan Tugas"}
+        onPress={handleSave}
+        disabled={isSaving}
+      />
 
       <View style={{ marginTop: 15 }}>
         {/* router.back: kembali ke halaman sebelumnya */}
