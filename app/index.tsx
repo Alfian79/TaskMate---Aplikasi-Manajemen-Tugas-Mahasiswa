@@ -1,3 +1,5 @@
+import ErrorMessage from "@/components/ErrorMessage";
+import Loading from "@/components/Loading";
 import { TaskItem } from "@/constants";
 import { useTasks } from "@/context/TaskContext";
 import { styles } from "@/styles";
@@ -19,7 +21,8 @@ export default function HomeScreen() {
   const router = useRouter();
 
   // useContext (lewat useTasks): daftar tugas diambil dari Context, bukan state lokal
-  const { tasks } = useTasks();
+  // MODUL 3: isLoading, error, dan importRemoteTasks untuk mengambil data dari API
+  const { tasks, isLoading, error, importRemoteTasks } = useTasks();
 
   // 1. useState: menyimpan teks pencarian dan status tampil/tidaknya teks "Daftar diperbarui"
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,6 +153,22 @@ export default function HomeScreen() {
 
         {/* router.push: pindah ke halaman form tambah tugas */}
         <Button title="Tambah Tugas" onPress={() => router.push("/add")} />
+
+        {/* MODUL 3: tombol mengambil tugas dari API eksternal (dinonaktifkan saat loading) */}
+        <View style={{ marginTop: 10 }}>
+          <Button
+            title="Impor Tugas dari Server"
+            color="#0f766e"
+            onPress={importRemoteTasks}
+            disabled={isLoading}
+          />
+        </View>
+
+        {/* MODUL 3: tampilan sesuai kondisi - sedang memuat / gagal */}
+        {isLoading ? <Loading message="Mengambil tugas dari server..." /> : null}
+        {error ? (
+          <ErrorMessage message={error} onRetry={importRemoteTasks} />
+        ) : null}
 
         {/* Muncul sebentar setelah tugas baru ditambahkan (diatur oleh useEffect) */}
         {showUpdated ? (

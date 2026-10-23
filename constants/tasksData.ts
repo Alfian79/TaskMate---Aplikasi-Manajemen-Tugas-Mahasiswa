@@ -12,6 +12,16 @@ export interface TaskItem {
   note?: string; // tanda "?" = properti opsional
 }
 
+// Bentuk data tugas baru yang diisi dari form (id & isCompleted dibuat otomatis)
+// Dipindah ke sini (Modul 3) agar bisa dipakai oleh services/ dan context/
+export type NewTask = {
+  title: string;
+  course: string;
+  deadline: string;
+  priority: Priority;
+  note?: string;
+};
+
 // ARRAY OF OBJECTS (Modul 1, 5.5.A)
 export const initialTasks: TaskItem[] = [
   {
