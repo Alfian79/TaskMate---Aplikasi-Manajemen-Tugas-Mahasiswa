@@ -49,12 +49,4 @@ export const initialTasks: TaskItem[] = [
     priority: "Low",
     isCompleted: true,
   },
-  {
-    id: "4",
-    title: "Test",
-    course: "test",
-    deadline: "Minggu Depan",
-    priority: "Low",
-    isCompleted: true,
-  },
 ];
