@@ -1,6 +1,7 @@
 import ErrorMessage from "@/components/ErrorMessage";
 import Loading from "@/components/Loading";
 import { TaskItem } from "@/constants";
+import { useAuth } from "@/context/AuthContext";
 import { useTasks } from "@/context/TaskContext";
 import { styles } from "@/styles";
 import { countCompleted, getPriorityColor } from "@/utils/taskHelpers";
@@ -8,13 +9,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Button,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Button,
+    Image,
+    Pressable,
+    ScrollView,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 
 export default function HomeScreen() {
@@ -23,6 +25,28 @@ export default function HomeScreen() {
   // useContext (lewat useTasks): daftar tugas diambil dari Context, bukan state lokal
   // MODUL 3: isLoading, error, dan importRemoteTasks untuk mengambil data dari API
   const { tasks, isLoading, error, importRemoteTasks } = useTasks();
+
+  // MODUL 4: data user yang sedang login & fungsi keluar dari AuthContext
+  const { user, signOut } = useAuth();
+  // full_name adalah metadata yang dikirim saat signUp (lihat app/(auth)/login.tsx)
+  const displayName: string =
+    (user?.user_metadata?.full_name as string | undefined) ??
+    user?.email ??
+    "Pengguna";
+
+  function handleSignOut() {
+    Alert.alert("Keluar", "Yakin ingin keluar dari akunmu?", [
+      { text: "Batal", style: "cancel" },
+      {
+        text: "Keluar",
+        style: "destructive",
+        // setelah signOut, session menjadi null -> route guard mengarahkan ke /(auth)/login
+        onPress: () => {
+          signOut();
+        },
+      },
+    ]);
+  }
 
   // 1. useState: menyimpan teks pencarian dan status tampil/tidaknya teks "Daftar diperbarui"
   const [searchQuery, setSearchQuery] = useState("");
@@ -143,6 +167,23 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* MODUL 4: sapaan user yang login + tombol keluar */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ flex: 1, color: "#334155", fontSize: 14 }}>
+            Halo, <Text style={{ fontWeight: "700" }}>{displayName}</Text>
+          </Text>
+          <Pressable onPress={handleSignOut}>
+            <Text style={{ color: "#ef4444", fontWeight: "600" }}>Keluar</Text>
+          </Pressable>
+        </View>
+
         {/* Input pencarian yang terhubung ke state searchQuery */}
         <TextInput
           placeholder="Cari tugas..."
@@ -165,7 +206,9 @@ export default function HomeScreen() {
         </View>
 
         {/* MODUL 3: tampilan sesuai kondisi - sedang memuat / gagal */}
-        {isLoading ? <Loading message="Mengambil tugas dari server..." /> : null}
+        {isLoading ? (
+          <Loading message="Mengambil tugas dari server..." />
+        ) : null}
         {error ? (
           <ErrorMessage message={error} onRetry={importRemoteTasks} />
         ) : null}

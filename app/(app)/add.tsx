@@ -5,13 +5,13 @@ import { getPriorityColor } from "@/utils/taskHelpers";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
-  Alert,
-  Button,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Alert,
+    Button,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 
 const priorityOptions: Priority[] = ["High", "Medium", "Low"];
