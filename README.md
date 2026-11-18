@@ -39,6 +39,36 @@ Aplikasi ini memenuhi seluruh kriteria teknis penilaian Modul 1:
 
 ---
 
+## 🔐 Implementasi Materi Modul 4 (Database & Autentikasi)
+
+Modul 4 menambahkan login ke TaskMate memakai **Supabase Auth**. Titik pentingnya:
+
+1. **Secure Token Storage** (`lib/supabase.ts`):
+   - Klien Supabase dibuat satu kali (*singleton*). Token sesi disimpan lewat adapter **`expo-secure-store`** (Keychain iOS / Keystore Android), bukan AsyncStorage.
+   - URL dan Publishable key dibaca dari file `.env` (`EXPO_PUBLIC_...`), tidak ditulis langsung di kode.
+2. **Supabase Auth Flow** (`app/(auth)/login.tsx`):
+   - Mode **Daftar** memakai `signUp` (nama lengkap dikirim sebagai metadata `full_name`), mode **Masuk** memakai `signInWithPassword`.
+   - Email di-`trim()`, tombol dinonaktifkan dan menampilkan `ActivityIndicator` saat loading, serta error ditampilkan lewat `Alert`.
+   - **Keluar** (`signOut`) ada di halaman Home.
+3. **Global AuthContext** (`context/AuthContext.tsx`):
+   - `getSession()` memulihkan sesi saat aplikasi dibuka, `onAuthStateChange()` memperbarui status saat login, logout, atau token diperbarui.
+4. **Route Guard** (`app/_layout.tsx`):
+   - Memakai `useSegments()`: belum login diarahkan ke `/(auth)/login`, sudah login diarahkan ke Home.
+   - Selama sesi diperiksa (`isLoading`), guard menunggu dan spinner ditampilkan agar layar tidak berkedip.
+
+Struktur rute: `app/(auth)/` untuk layar publik dan `app/(app)/` untuk layar yang dilindungi login.
+
+### Menyiapkan file `.env`
+File `.env` **sengaja tidak di-push** (berisi kredensial, dan repositori ini publik). Salin contohnya lalu isi:
+
+```bash
+cp .env.example .env        # Windows (CMD): copy .env.example .env
+```
+
+Di dashboard Supabase, matikan **Authentication → Providers → Email → "Confirm email"** agar akun baru bisa langsung masuk saat pengujian.
+
+---
+
 ## 🚀 Cara Jalankan Project
 
 ### 1. Prasyarat
@@ -57,7 +87,11 @@ cd TaskMate-Aplikasi-Manajemen-Tugas-Mahasiswa
 # 3. Install semua dependency
 npm install
 
-# 4. Jalankan Expo Development Server
+# 4. Buat file .env dari contoh, lalu isi URL & Publishable key Supabase (lihat bagian Modul 4)
+cp .env.example .env
+
+# 5. Jalankan Expo Development Server
 npx expo start --go
 
-# 5. Setelah server berjalan, pindai (scan) QR Code yang muncul di terminal menggunakan aplikasi Expo Go atau kamera ponsel Anda.
+# 6. Setelah server berjalan, pindai (scan) QR Code yang muncul di terminal menggunakan aplikasi Expo Go atau kamera ponsel Anda.
+```
