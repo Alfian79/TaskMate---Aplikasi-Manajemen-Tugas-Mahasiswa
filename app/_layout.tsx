@@ -1,19 +1,59 @@
-import { TaskProvider } from "@/context/TaskContext";
-import { Stack } from "expo-router";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { Stack, useRouter, useSegments } from "expo-router";
+import { useEffect } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
-// MODUL 2 (2.7 Layout Page & 3.2 Stack): root layout untuk semua halaman.
-// TaskProvider membungkus Stack agar semua halaman bisa memakai useTasks().
-export default function RootLayout() {
+// MODUL 4 (4.2 Navigation Guard): penjaga rute di root layout.
+function RootNavigator() {
+  const { session, isLoading } = useAuth();
+  const segments = useSegments(); // jalur rute aktif, mis. ["(auth)", "login"] atau ["(app)"]
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoading) return; // tunggu sampai sesi selesai dipulihkan (cegah layar berkedip)
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!session && !inAuthGroup) {
+      // belum login tetapi mencoba masuk ke area pribadi -> usir ke login
+      router.replace("/(auth)/login");
+    } else if (session && inAuthGroup) {
+      // sudah login tetapi masih di layar login -> arahkan ke Home
+      router.replace("/");
+    }
+  }, [session, isLoading, segments, router]);
+
   return (
-    <TaskProvider>
-      <Stack>
-        {/* Halaman Utama TaskMate -> route "/" */}
-        <Stack.Screen name="index" options={{ title: "TaskMate - Home" }} />
-        {/* Form Tambah Tugas -> route "/add" */}
-        <Stack.Screen name="add" options={{ title: "Tambah Tugas" }} />
-        {/* Dynamic route -> "/task/1", "/task/2", dst. (judul diatur di halamannya) */}
-        <Stack.Screen name="task/[id]" options={{ title: "Detail Tugas" }} />
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(app)" />
       </Stack>
-    </TaskProvider>
+
+      {/* Perisai pemuatan: menutupi layar selama sesi belum selesai diperiksa */}
+      {isLoading ? (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#2563eb" />
+        </View>
+      ) : null}
+    </>
   );
 }
+
+// AuthProvider membungkus semua halaman agar useAuth() bisa dipakai di mana saja.
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f1f5f9",
+  },
+});
